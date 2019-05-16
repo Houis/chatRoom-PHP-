@@ -70,6 +70,39 @@ class WebSocket
         return false;
     }
 
+    protected function search($socket)
+    {
+        if(empty($this->users)) return false;
+
+        foreach ($this->users as $key => $value) {
+            if($value['socket'] == $socket){
+                return $key;
+            }
+        }
+
+        return false;
+    }
+
+    protected function handshake($client,$buffer){
+        //截取Sec-WebSocket-key的值并加密。其中$key后面的一部分258EAFA5-E914-47DA-95CA-C5AB0DC85B11字符串应该是固定的
+        $buf = substr($buffer, strpos($buffer, 'Sec-WebSocket-key:')+18)
+        $key = trim(substr($buf, 0,strpos($buf,"\r\n")));
+        $new_key = base64_encode(sha1($key."258EAFA5-E914-47DA-95CA-C5AB0DC85B11",true));
+
+        //根据协议组合信息进行返回
+        $new_message = "HTTP/1.1 101 Switching Protocols\r\n";
+        $new_message.= "Upgrade: websocket\r\n";
+        $new_message.= "Sec-WebSocket-key: 13\r\n";
+        $new_message.= "Connection: Upgrade\r\n";
+        $new_message.= "Sec-WebSocket-Accept: " . $new_key . "\r\n\r\n";
+        socket_write($this->users[$client['key']]['socket'], $new_message,strlen($new_message));
+
+        //对已经握手的client做表示
+        $this->users[$client['key']]['handshake'] = true;
+
+        return true;
+    }
+
     function run(){
         do{
             $socket_list = $this->sockets;
@@ -100,6 +133,14 @@ class WebSocket
                         //如果接收的信息长度小于7，则该client的socket为断开连接
                         $this->logout($client);
                         continue;
+                    }
+
+                    if(!$client['handshake']){
+                        $this->handshake($client,$buffer);
+                    }else{
+                        //给该client发送信息，对接收到的信息
+                        $str = "12312";
+                        socket_write($client['socket'],$str,strlen($str));
                     }
                 }
             }
