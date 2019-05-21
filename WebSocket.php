@@ -85,7 +85,7 @@ class WebSocket
 
     protected function handshake($client,$buffer){
         //截取Sec-WebSocket-key的值并加密。其中$key后面的一部分258EAFA5-E914-47DA-95CA-C5AB0DC85B11字符串应该是固定的
-        $buf = substr($buffer, strpos($buffer, 'Sec-WebSocket-key:')+18)
+        $buf = substr($buffer, strpos($buffer, 'Sec-WebSocket-key:')+18);
         $key = trim(substr($buf, 0,strpos($buf,"\r\n")));
         $new_key = base64_encode(sha1($key."258EAFA5-E914-47DA-95CA-C5AB0DC85B11",true));
 
