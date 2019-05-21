@@ -124,22 +124,27 @@ class Demo
         $frame[0] = '81';
         $len = strlen($msg);
         if($len < 126){
+            //dechex() 函数把十进制转换为十六进制。
             $frame[1] = $len<16?'0'.dechex($len):dechex($len);
         }else if($len < 65025){
             $s=dechex($len);
+            //str_repeat()把字符串重复到指定次数
             $frame[1]='7e'.str_repeat('0',4-strlen($s)).$s;
         }else{
             $s=dechex($len);
             $frame[1]='7f'.str_repeat('0',16-strlen($s)).$s;
         }
         $frame[2] = $this->ord_hex($msg);
-        $data = implode('',$frame);
+//        $data = implode('',$frame);
+        $data = join('',$frame);
+        //pack()把数据装入一个二进制的字符串里面
         return pack("H*", $data);
     }
     function ord_hex($data)  {
         $msg = '';
         $l = strlen($data);
         for ($i= 0; $i<$l; $i++) {
+            //ord()返回某个字符的ASCII值
             $msg .= dechex(ord($data{$i}));
         }
         return $msg;
